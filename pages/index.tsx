@@ -1,3 +1,5 @@
+import styles from "@styles/Home.module.css";
+
 import Container from "@components/Container";
 import Header from "@components/Header";
 
@@ -6,7 +8,7 @@ import Head from "next/head";
 
 const Home: NextPage = () => {
   return (
-    <Container>
+    <Container className={styles.container}>
       <Head>
         <title>Todoish</title>
       </Head>

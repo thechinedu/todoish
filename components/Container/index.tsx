@@ -1,9 +1,14 @@
-import styles from "./index.module.css"
+import styles from "./index.module.css";
 
+import cn from "classnames";
 import { FC } from "react";
 
-const Container: FC = ({ children }) => {
-  return <div className={styles.container}>{children}</div>;
+type ContainerProps = {
+  className?: string;
+};
+
+const Container: FC<ContainerProps> = ({ className = "", children }) => {
+  return <div className={cn(styles.container, className)}>{children}</div>;
 };
 
 export default Container;

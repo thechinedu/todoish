@@ -22,9 +22,9 @@
   --blue: #0095f6;
   --off-white: #fafafa;
   --white: #ffffff;
-  --gray: #8e8e8e;
+  --gray: #575757;
   --lighter-gray: #dbdbdb;
-  --tomato: #ed4956;
+  --tomato: #e44232;
 
   /* Spacing */
 
@@ -58,7 +58,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
   font-size: var(--base-font-size);
-  background-color: var(--off-white);
+  background-color: var(--white);
   color: var(--black);
   height: 100%;
 }
