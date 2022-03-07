@@ -29,7 +29,8 @@
 
 .welcomeMessage {
   font-size: var(--larger);
-  margin-bottom: var(--spacer-4);
+  margin: 0 auto var(--spacer-4);
+  width: 50%;
 }
 
 .heroContainer a {
