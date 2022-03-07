@@ -1,0 +1,6 @@
+{
+  "name": "Todoish CI workflow",
+  "description": "Automatically run tests for Todoish",
+  "iconName": "nodejs",
+  "categories": ["JavaScript", "TypeScript", "Node", "Npm"]
+}
