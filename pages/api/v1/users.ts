@@ -6,34 +6,38 @@ type Data = {
   status: string;
   message: string;
   data?: unknown;
+  errors?: unknown;
 };
 
 type Middleware = (
   req: NextApiRequest,
   res: NextApiResponse<Data>,
-  next?: Middleware
+  next: () => void // invoke the next middleware in the queue
 ) => void;
 
-// [validateReq, handleReq]
-
-function middlewareChain(...middlewareFns: Middleware[]) {
+function chainMiddlewares(...middlewareFns: Middleware[]) {
   return (req: NextApiRequest, res: NextApiResponse<Data>) => {
-    const middleware = middlewareFns.slice();
     const next = () => {
-      const fn = middleware.shift();
-      if (fn) {
-        fn(req, res, next);
-      }
+      const middlewareFn = middlewareFns.shift();
+
+      if (middlewareFn) middlewareFn(req, res, next);
     };
+
     next();
   };
 }
 
-const validateReq = (req: NextApiRequest, res: NextApiResponse<Data>) => {
+const validateReq: Middleware = (req, res, next) => {
+  if (req.method !== "POST") {
+    return res
+      .setHeader("Allow", "POST")
+      .status(405)
+      .json({ status: "error", message: "Method not allowed" });
+  }
+
   const { body } = req;
   const { email, password } = body;
   const errors = [];
-  console.log("Gets here!", { email, password });
 
   if (!email || !password) {
     return res.status(400).json({
@@ -44,48 +48,33 @@ const validateReq = (req: NextApiRequest, res: NextApiResponse<Data>) => {
   }
 
   if (!validator.isEmail(email)) {
-    errors.push({
-      status: "fail",
-      message: "Email is not valid",
-    });
+    errors.push("Email is not valid");
   }
 
   if (!validator.isLength(password, { min: 8 })) {
-    errors.push({
-      status: "fail",
-      message: "Password must be at least 8 characters",
-    });
+    errors.push("Password must be at least 8 characters");
   }
 
   if (errors.length) {
     return res.status(422).json({
       status: "fail",
       message: "Validation failed",
-      data: errors,
+      errors,
     });
   }
+
+  return next();
+};
+
+const createUser: Middleware = (_, res) => {
+  res.status(201).json({ status: "success", message: "User created" });
 };
 
 export default function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data>
 ) {
-  if (req.method !== "POST") {
-    res
-      .setHeader("Allow", "POST")
-      .status(405)
-      .json({ status: "error", message: "Method not allowed" });
+  const executeMiddlewares = chainMiddlewares(validateReq, createUser);
 
-    return;
-  }
-
-  // middlewareChain()(req, res);
-
-  // validateReq(req, res);
-
-  // const { body } = req;
-  // const { email, password } = body;
-
-  // console.log(body, "Gets here too");
-  // res.status(200).json({ status: "success", message: "GET user" });
+  executeMiddlewares(req, res);
 }
