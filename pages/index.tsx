@@ -1,7 +1,7 @@
-import styles from "@styles/Home.module.css";
+import styles from "@/styles/Home.module.css";
 
-import Container from "@components/Container";
-import Header from "@components/Header";
+import Container from "@/components/Container";
+import Header from "@/components/Header";
 
 import type { NextPage } from "next";
 import Head from "next/head";
