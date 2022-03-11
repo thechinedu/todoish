@@ -1,37 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { Data, HTTPMethod, HTTPStatus, Middleware } from "@/types/shared";
+import { chainMiddlewares } from "@/utils";
 import validator from "validator";
 
-type Data = {
-  status: string;
-  message: string;
-  data?: unknown;
-  errors?: unknown;
-};
-
-type Middleware = (
-  req: NextApiRequest,
-  res: NextApiResponse<Data>,
-  next: () => void // invoke the next middleware in the queue
-) => void;
-
-function chainMiddlewares(...middlewareFns: Middleware[]) {
-  return (req: NextApiRequest, res: NextApiResponse<Data>) => {
-    const next = () => {
-      const middlewareFn = middlewareFns.shift();
-
-      if (middlewareFn) middlewareFn(req, res, next);
-    };
-
-    next();
-  };
-}
-
 const validateReq: Middleware = (req, res, next) => {
-  if (req.method !== "POST") {
+  if (req.method !== HTTPMethod.POST) {
     return res
-      .setHeader("Allow", "POST")
-      .status(405)
+      .setHeader("Allow", HTTPMethod.POST)
+      .status(HTTPStatus.METHOD_NOT_ALLOWED)
       .json({ status: "error", message: "Method not allowed" });
   }
 
@@ -40,7 +17,7 @@ const validateReq: Middleware = (req, res, next) => {
   const errors = [];
 
   if (!email || !password) {
-    return res.status(400).json({
+    return res.status(HTTPStatus.BAD_REQUEST).json({
       status: "error",
       message:
         "Please provide both email and password in the body of the request",
@@ -56,7 +33,7 @@ const validateReq: Middleware = (req, res, next) => {
   }
 
   if (errors.length) {
-    return res.status(422).json({
+    return res.status(HTTPStatus.UNPROCESSABLE_ENTITY).json({
       status: "fail",
       message: "Validation failed",
       errors,
@@ -67,7 +44,9 @@ const validateReq: Middleware = (req, res, next) => {
 };
 
 const createUser: Middleware = (_, res) => {
-  res.status(201).json({ status: "success", message: "User created" });
+  res
+    .status(HTTPStatus.CREATED)
+    .json({ status: "success", message: "User created" });
 };
 
 export default function handler(
