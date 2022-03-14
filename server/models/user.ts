@@ -1,4 +1,4 @@
-import { db } from "@/utils/datasource";
+import { db } from "@/utils";
 
 type UserReqParams = {
   email: string;
