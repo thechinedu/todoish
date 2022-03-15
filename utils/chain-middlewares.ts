@@ -1,7 +1,7 @@
 import type { Data, Middleware } from "@/types/shared";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-export function chainMiddlewares(...middlewareFns: Middleware[]) {
+export const chainMiddlewares = (...middlewareFns: Middleware[]) => {
   return (req: NextApiRequest, res: NextApiResponse<Data>) => {
     const next = () => {
       const middlewareFn = middlewareFns.shift();
@@ -11,4 +11,4 @@ export function chainMiddlewares(...middlewareFns: Middleware[]) {
 
     next();
   };
-}
+};

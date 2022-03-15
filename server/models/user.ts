@@ -1,4 +1,4 @@
-import { db } from "@/utils";
+import { db, hashPassword } from "@/utils";
 
 type UserReqParams = {
   email: string;
@@ -6,7 +6,17 @@ type UserReqParams = {
 };
 
 export default class User {
-  static create({ email, password }: UserReqParams) {
-    return db.user.create({ data: { email, passwordDigest: password } });
+  static async create({ email, password }: UserReqParams) {
+    return db.user.create({
+      data: { email, passwordDigest: await hashPassword(password) },
+    });
+  }
+
+  static findByEmail(email: string) {
+    return db.user.findUnique({
+      where: {
+        email,
+      },
+    });
   }
 }
