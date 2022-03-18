@@ -33,11 +33,20 @@ const ensureEmailUniqueness: Middleware = async (req, res, next) => {
   const { body } = req;
   const { email } = body;
 
-  if (await User.findByEmail(email)) {
-    return res.status(HTTPStatus.UNPROCESSABLE_ENTITY).json({
-      status: "fail",
-      message: "Validation failed",
-      errors: ["Email is already in use by another user"],
+  try {
+    const user = await User.findByEmail(email);
+    if (user) {
+      return res.status(HTTPStatus.UNPROCESSABLE_ENTITY).json({
+        status: "fail",
+        message: "Validation failed",
+        errors: ["Email is already in use by another user"],
+      });
+    }
+  } catch {
+    // TODO: use an error logging service to log the error thrown
+    return res.status(HTTPStatus.INTERNAL_SERVER_ERROR).json({
+      status: "error",
+      message: "Internal server error",
     });
   }
 
@@ -45,6 +54,7 @@ const ensureEmailUniqueness: Middleware = async (req, res, next) => {
 };
 
 const ensureValidFields: Middleware = (req, res, next) => {
+  console.log("ensureValidFields ==>", "runs this operation");
   const { body } = req;
   const { email, password } = body;
   const errors = [];
@@ -69,56 +79,15 @@ const ensureValidFields: Middleware = (req, res, next) => {
 };
 
 export const validateCreateUser: Middleware = async (req, res, next) => {
-  // const executeMiddlewares = chainMiddlewares(
-  //   ensureAllowedRequest,
-  //   ensureRequiredFieldsPresent,
-  //   ensureEmailUniqueness,
-  //   ensureValidFields
-  // );
+  const executeMiddlewares = chainMiddlewares(
+    ensureAllowedRequest,
+    ensureRequiredFieldsPresent,
+    ensureEmailUniqueness,
+    ensureValidFields
+  );
 
-  // return executeMiddlewares(req, res);
-  if (req.method !== HTTPMethod.POST) {
-    return res
-      .setHeader("Allow", HTTPMethod.POST)
-      .status(HTTPStatus.METHOD_NOT_ALLOWED)
-      .json({ status: "error", message: "Method not allowed" });
-  }
-
-  const { body } = req;
-  const { email, password } = body;
-  const errors = [];
-
-  if (!email || !password) {
-    return res.status(HTTPStatus.BAD_REQUEST).json({
-      status: "error",
-      message:
-        "Please provide both email and password in the body of the request",
-    });
-  }
-
-  if (await User.findByEmail(email)) {
-    return res.status(HTTPStatus.UNPROCESSABLE_ENTITY).json({
-      status: "fail",
-      message: "Validation failed",
-      errors: ["Email is already in use by another user"],
-    });
-  }
-
-  if (!validator.isEmail(email)) {
-    errors.push("Email is not valid");
-  }
-
-  if (!validator.isLength(password, { min: 8 })) {
-    errors.push("Password must be at least 8 characters");
-  }
-
-  if (errors.length) {
-    return res.status(HTTPStatus.UNPROCESSABLE_ENTITY).json({
-      status: "fail",
-      message: "Validation failed",
-      errors,
-    });
-  }
-
-  return next();
+  // TODO: API resolved without sending a response for /api/v1/users, this may result in stalled requests
+  // Investigate why this is happening
+  // it seems to be because ensureEmailUniqueness returns a promise
+  executeMiddlewares(req, res, next);
 };
